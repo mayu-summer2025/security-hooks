@@ -1,0 +1,134 @@
+#!/bin/bash
+
+# Git pre-push hook to run Gitleaks on commits that will be pushed
+# Place this file in .git/hooks/pre-push and make it executable
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+NC='\033[0m' # No Color
+
+echo -e "${YELLOW}Running Gitleaks pre-push hook...${NC}"
+
+# Get the remote branch we're pushing to
+remote="$1"
+url="$2"
+
+# Find the remote ref being pushed to
+while read local_ref local_sha remote_ref remote_sha
+do
+  # Only examine branches (not tags)
+  if [[ $remote_ref == refs/heads/* ]]; then
+    # Get the range of commits being pushed
+    if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
+      # New branch, examine all commits
+      range="$local_sha"
+    else
+      # Update to existing branch, examine new commits only
+      range="$remote_sha..$local_sha"
+    fi
+    
+    echo -e "${YELLOW}Checking commits in range: $range${NC}"
+    
+    # Check if Docker is available
+    if command -v docker &> /dev/null; then
+      # Run gitleaks with Docker
+      echo -e "${YELLOW}Running Gitleaks scan with Docker...${NC}"
+      
+      # Clone current repo to a temp dir to scan
+      TEMP_DIR=$(mktemp -d)
+      trap 'rm -rf "$TEMP_DIR"' EXIT
+      
+      git clone --quiet . "$TEMP_DIR"
+      cd "$TEMP_DIR"
+      
+      # Copy gitleaks config if it exists
+      if [ -f "../.gitleaks.toml" ]; then
+        cp "../.gitleaks.toml" .
+      else
+        # Create minimal config for the scan
+        cat > .gitleaks.toml << 'EOL'
+# Minimal Gitleaks Configuration for pre-push hook
+title = "Gitleaks Config"
+
+# GitHub Secrets
+[[rules]]
+id = "github-pat"
+description = "GitHub Personal Access Token"
+regex = '''(?i)(?:github|gh)(?:[_-])?(?:pat|token|key|secret)(?:[_-])?=?(?:[\s\n\r]*['"`])([0-9a-zA-Z_]{35,255})(?:['"`])'''
+secretGroup = 1
+keywords = ["github", "token", "pat", "ghp_"]
+
+# Google Cloud/GCP Secrets
+[[rules]]
+id = "google-api-key"
+description = "Google API Key"
+regex = '''(?i)(?:google|gcp|youtube|drive|yt)(?:[_-])?(?:api|apikey|api[_-]?key|key|api[_-]?key[_-]?id)(?:[_-])?=?(?:[\s\n\r]*['"`])?([a-zA-Z0-9_-]{32,45})(?:['"`])?'''
+secretGroup = 1
+keywords = ["google", "gcp", "api", "key", "AIza"]
+
+# Jenkins Secrets
+[[rules]]
+id = "jenkins-api-token"
+description = "Jenkins API Token"
+regex = '''(?i)(?:jenkins)(?:[_-])?(?:api|token|key|secret)(?:[_-])?=?(?:[\s\n\r]*['"`])?([0-9a-zA-Z]{30,64})(?:['"`])?'''
+secretGroup = 1
+keywords = ["jenkins", "api", "token"]
+
+# AWS (commonly used with GCP and Jenkins)
+[[rules]]
+id = "aws-access-key"
+description = "AWS Access Key ID"
+regex = '''(?i)(?:aws|amazon)(?:[_-])?(?:access|account|key|secret)(?:[_-])?(?:id|key|token)(?:[_-])?=?(?:[\s\n\r]*['"`])?([A-Z0-9]{20})(?:['"`])?'''
+secretGroup = 1
+keywords = ["aws", "amazon", "access", "key", "AKIA"]
+EOL
+      fi
+      
+      docker run --rm -v "$(pwd):/scan" \
+        -e GITLEAKS_REPORT_ALL=true \
+        zricethezav/gitleaks:latest \
+        detect \
+        --source="/scan" \
+        --config="/scan/.gitleaks.toml" \
+        --verbose \
+        --log-opts="--all $range" 
+      
+      GITLEAKS_EXIT=$?
+      
+      cd - > /dev/null
+    else
+      # Check if native gitleaks is available
+      if command -v gitleaks &> /dev/null; then
+        echo -e "${YELLOW}Running Gitleaks scan with native binary...${NC}"
+        
+        # Run gitleaks with native binary
+        gitleaks detect \
+          --verbose \
+          --report-format=json \
+          --report-path=gitleaks-report.json \
+          --log-opts="--all $range"
+        
+        GITLEAKS_EXIT=$?
+      else
+        echo -e "${RED}ERROR: Neither Docker nor Gitleaks binary found.${NC}"
+        echo -e "${YELLOW}Please install Docker or Gitleaks to use this pre-push hook.${NC}"
+        echo -e "${YELLOW}Skipping Gitleaks scan...${NC}"
+        GITLEAKS_EXIT=0
+      fi
+    fi
+    
+    # Check gitleaks exit code
+    if [ $GITLEAKS_EXIT -ne 0 ]; then
+      echo -e "${RED}ERROR: Gitleaks found potential secrets in your commits!${NC}"
+      echo -e "${RED}Push aborted. Please remove the secrets, amend your commits, and try again.${NC}"
+      echo -e "${YELLOW}To bypass this check (NOT RECOMMENDED), use:${NC}"
+      echo -e "${YELLOW}  git push --no-verify${NC}"
+      exit 1
+    fi
+  fi
+done < /dev/stdin
+
+echo -e "${GREEN}No secrets found in commits. Push proceeding.${NC}"
+exit 0

@@ -1,0 +1,239 @@
+title = "Gitleaks Config"
+
+# GitHub Secrets
+[[rules]]
+id = "github-pat"
+description = "GitHub Personal Access Token"
+regex = '''(?i)(?:github|gh)(?:[_-])?(?:pat|token|key|secret)(?:[_-])?=?(?:[\\s\n\r]*['"`])([0-9a-zA-Z_]{35,255})(?:['"`])'''
+secretGroup = 1
+entropy = 4.5
+keywords = [
+    "github", 
+    "token",
+    "pat",
+    "ghp_"
+]
+
+[[rules]]
+id = "github-oauth"
+description = "GitHub OAuth Access Token"
+regex = '''(?i)(?:github|gh|oauth)(?:[_-])?(?:access|auth|app|oauth|client|api|personal|)(?:[_-])?(?:token|key|secret)(?:[_-])?=?(?:[\\s\n\r]*['"`])?([0-9a-zA-Z]{35,250})(?:['"`])?'''
+secretGroup = 1
+entropy = 4.5
+keywords = [
+    "github",
+    "oauth",
+    "token"
+]
+
+[[rules]]
+id = "github-refresh-token"
+description = "GitHub Refresh Token"
+regex = '''(?i)(?:github|gh|oauth)(?:[_-])?(?:refresh|access|auth|app|oauth|client|api|personal|)(?:[_-])?(?:token|key|secret)(?:[_-])?=?(?:[\\s\n\r]*['"`])?([0-9a-zA-Z]{35,250})(?:['"`])?'''
+secretGroup = 1
+entropy = 4.5
+keywords = [
+    "github",
+    "refresh",
+    "token"
+]
+
+# Google Cloud/GCP Secrets
+[[rules]]
+id = "google-api-key"
+description = "Google API Key"
+regex = '''(?i)(?:google|gcp|youtube|drive|yt)(?:[_-])?(?:api|apikey|api[_-]?key|key|api[_-]?key[_-]?id)(?:[_-])?=?(?:[\\s\n\r]*['"`])?([a-zA-Z0-9_-]{32,45})(?:['"`])?'''
+secretGroup = 1
+entropy = 4.5
+keywords = [
+    "google",
+    "gcp",
+    "api",
+    "key",
+    "AIza"
+]
+
+[[rules]]
+id = "google-oauth"
+description = "Google OAuth Client ID"
+regex = '''(?i)(?:google|gcp|auth)(?:[_-])?(?:client|app|user|email|login)(?:[_-])?(?:id|key|secret|token)(?:[_-])?=?(?:[\\s\n\r]*['"`])?([0-9a-zA-Z-_]{30,150})(?:['"`])?'''
+secretGroup = 1
+entropy = 4.5
+keywords = [
+    "google",
+    "gcp",
+    "oauth",
+    "client",
+    "id"
+]
+
+[[rules]]
+id = "google-oauth-refresh-token"
+description = "Google OAuth Refresh Token"
+regex = '''(?i)(?:google|gcp|auth)(?:[_-])?(?:refresh|oauth)(?:[_-])?(?:token|secret)(?:[_-])?=?(?:[\\s\n\r]*['"`])?([0-9a-zA-Z-_\\.]{30,150})(?:['"`])?'''
+secretGroup = 1
+entropy = 4.5
+keywords = [
+    "google",
+    "gcp",
+    "refresh",
+    "token"
+]
+
+[[rules]]
+id = "gcp-service-account"
+description = "Google Cloud Service Account Key"
+regex = '''(?i)(?:"type"\\s*:\\s*"service_account"|"project_id"|"private_key_id"|"private_key"|"client_email"|"client_id"|"auth_uri"|"token_uri"|"auth_provider_x509_cert_url"|"client_x509_cert_url")'''
+keywords = [
+    "service_account",
+    "private_key",
+    "client_email"
+]
+
+[[rules]]
+id = "gcp-credentials-file"
+description = "Google Cloud Credentials File Content"
+regex = '''(?i)(?:\\{\\s*"type"\\s*:\\s*"service_account".*"private_key"\\s*:\\s*"-----BEGIN PRIVATE KEY-----[^-]+-----END PRIVATE KEY-----\\s*".*\\})'''
+keywords = [
+    "service_account",
+    "private_key",
+    "BEGIN PRIVATE KEY"
+]
+
+[[rules]]
+id = "gcp-access-token"
+description = "Google Cloud Access Token"
+regex = '''(?i)(?:gcp|google|firebase)(?:[_-])?(?:access|auth|account|api|app|secret|password)(?:[_-])?(?:token|key|credential|id|secret)(?:[_-])?=?(?:[\\s\n\r]*['"`])?([0-9a-zA-Z_\\-\\.=]{30,150})(?:['"`])?'''
+secretGroup = 1
+entropy = 4.5
+keywords = [
+    "gcp",
+    "google",
+    "firebase",
+    "access",
+    "token",
+    "ya29"
+]
+
+# Jenkins Secrets
+[[rules]]
+id = "jenkins-api-token"
+description = "Jenkins API Token"
+regex = '''(?i)(?:jenkins)(?:[_-])?(?:api|token|key|secret)(?:[_-])?=?(?:[\\s\n\r]*['"`])?([0-9a-zA-Z]{30,64})(?:['"`])?'''
+secretGroup = 1
+entropy = 4.5
+keywords = [
+    "jenkins",
+    "api",
+    "token"
+]
+
+[[rules]]
+id = "jenkins-password"
+description = "Jenkins Password or Credentials"
+regex = '''(?i)(?:jenkins)(?:[_-])?(?:pass|password|pwd|credential|secret|key)(?:[_-])?=?(?:[\\s\n\r]*['"`])?([0-9a-zA-Z\.\-_!@#$%^&*()+=]{8,64})(?:['"`])?'''
+secretGroup = 1
+entropy = 3.5
+keywords = [
+    "jenkins",
+    "password",
+    "credential"
+]
+
+# AWS (commonly used with GCP and Jenkins)
+[[rules]]
+id = "aws-access-key"
+description = "AWS Access Key ID"
+regex = '''(?i)(?:aws|amazon)(?:[_-])?(?:access|account|key|secret)(?:[_-])?(?:id|key|token)(?:[_-])?=?(?:[\\s\n\r]*['"`])?([A-Z0-9]{20})(?:['"`])?'''
+secretGroup = 1
+entropy = 3.5
+keywords = [
+    "aws",
+    "amazon",
+    "access",
+    "key",
+    "AKIA"
+]
+
+[[rules]]
+id = "aws-secret-key"
+description = "AWS Secret Access Key"
+regex = '''(?i)(?:aws|amazon)(?:[_-])?(?:secret|account|key|credential|password)(?:[_-])?(?:access|key|token|id|secret)(?:[_-])?=?(?:[\\s\n\r]*['"`])?([A-Za-z0-9/\+=]{40})(?:['"`])?'''
+secretGroup = 1
+entropy = 4.5
+keywords = [
+    "aws",
+    "amazon",
+    "secret",
+    "key"
+]
+
+# Generic High Entropy Strings as Fallback
+[[rules]]
+id = "generic-api-key"
+description = "Generic High Entropy API Key"
+regex = '''(?i)(?:key|api|token|secret|password|pass|pwd)(?:[_-])?=(?:[\\s\n\r]*['"`])?([0-9a-zA-Z\-_=+/]{16,64})(?:['"`])?'''
+secretGroup = 1
+entropy = 4.3
+keywords = [
+    "key",
+    "api",
+    "token",
+    "secret"
+]
+
+[[rules]]
+id = "generic-secret"
+description = "Generic Secret"
+regex = '''(?i)(?:secret|password|credential|token|api|key)(?:[_-])?=(?:[\\s\n\r]*['"`])?([0-9a-zA-Z\-_=+/\.]{8,64})(?:['"`])?'''
+secretGroup = 1
+entropy = 3.7
+keywords = [
+    "secret",
+    "password",
+    "credential",
+    "token"
+]
+
+# Additional sensitive terms
+[[rules]]
+id = "sensitive-term-password"
+description = "Password in code"
+regex = '''(?i)(?:password|passwd|pwd|secret)(?:[_-])?=(?:[\\s\n\r]*['"`])?([^'"\n\r]{3,64})(?:['"`])?'''
+secretGroup = 1
+entropy = 3.5
+keywords = [
+    "password",
+    "passwd",
+    "pwd",
+    "secret"
+]
+
+# Configuration for allowlist
+[allowlist]
+description = "Allowlisted files"
+paths = [
+    '''(?i)\.gitleaks.toml$''',
+    '''(?i)\.gitignore$''',
+    '''(?i)\.gitlab-ci.yml$''',
+    '''(?i)go.mod$''',
+    '''(?i)go.sum$''',
+    '''(?i)package-lock.json$''',
+    '''(?i)yarn.lock$''',
+    '''(?i)\.env\.example$''',
+    '''(?i)\.env\.sample$''',
+    '''(?i)\.env\.template$''',
+    '''(?i)example.*\.env$''',
+    '''(?i)sample.*\.env$''',
+    '''(?i)template.*\.env$''',
+    '''(?i)test/.*''',
+    '''(?i)tests/.*''',
+    '''(?i)\.test\.''',
+    '''(?i)\.spec\.'''
+]
+
+# Prevent false positives in unit tests or documentation
+regexes = [
+    '''(?i)(?:test|example|sample|placeholder|dummy|fake)(?:[_-])?(?:key|token|secret|password|credential)''',
+    '''```[\s\S]*?```'''
+]
